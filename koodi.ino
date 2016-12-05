@@ -8,7 +8,7 @@
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 int delayval = 100;
 const char* ssid = "Pullonkaula";
-const char* password = " **** SALASANA TÄHÄN **** ";
+const char* password = "SALASANA";
 WiFiServer server(80);
 
 /////////////
@@ -87,6 +87,10 @@ if (request.indexOf("/LED=gintonic") != -1)  {
 if (request.indexOf("/LED=pkerikoinen") != -1)  {
   twinkleRandom();
 }
+
+if (request.indexOf("/LED=allWhiteEverything") != -1)  {
+  currentTest();
+}
  
   // Return the response
   client.println("HTTP/1.1 200 OK");
@@ -99,6 +103,7 @@ if (request.indexOf("/LED=pkerikoinen") != -1)  {
   client.println("<a href=\"/LED=ttyspecial\"\"><button>TTY Special</button></a><br />");
   client.println("<a href=\"/LED=gintonic\"\"><button>Gin & Tonic</button></a><br />"); 
   client.println("<a href=\"/LED=pkerikoinen\"\"><button>Pullonkaulan Erikoinen</button></a><br />"); 
+   client.println("<a href=\"/LED=allWhiteEverything\"\"><button>valkovenäläinen</button></a><br />"); 
   client.println("</html>");
  
   delay(1);
@@ -158,5 +163,13 @@ void twinkleRandom() {
      pixels.show();
      delay(delayval);
      pixels.setPixelColor(Pixel,0,0,0);
+   } turnAllOff();
+}
+///////////////////////////////////////////////////////////////////
+void currentTest() {
+  for (int i=0; i<NUMPIXELS; i++) {
+     pixels.setPixelColor(i,255,255,255));
+     pixels.show();
+     delay(10000);
    } turnAllOff();
 }
