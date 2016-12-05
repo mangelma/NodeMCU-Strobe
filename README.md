@@ -8,3 +8,15 @@ Upload speed: "115200"
 Port: valitse oikea
 
 Asenna Adafruitin NeoPixel-kirjasto ja ESP8266WiFi
+
+Demo-skripti Pythonilla:
+
+import requests
+
+requests.get('http://192.168.1.105/LED=pkerikoinen')
+
+requests.get('http://192.168.1.105/LED=gintonic')
+
+requests.get('http://192.168.1.105/LED=tuplajallu')
+
+requests.get('http://192.168.1.105/LED=ttyspecial')
