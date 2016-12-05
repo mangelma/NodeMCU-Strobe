@@ -6,3 +6,5 @@ CPU Frequency: "80 MHz"
 Flash Size: "4M (3M SPIFFS)"
 Upload speed: "115200"
 Port: valitse oikea
+
+Asenna Adafruitin NeoPixel-kirjasto ja ESP8266WiFi
