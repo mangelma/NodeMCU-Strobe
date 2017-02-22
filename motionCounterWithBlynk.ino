@@ -5,36 +5,46 @@
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
 #include <RCSwitch.h>
+#include <WidgetRTC.h>
 #define PIN            0  
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(12, PIN, NEO_GRB + NEO_KHZ800);
-char auth[] = "my token";
+char auth[] = "auth";
 const char* ssid = "Darude Lanstrom";
-const char* password = "our password";
+const char* password = "password";
 RCSwitch mySwitch = RCSwitch();
-int motionCount = 0;
+int motionCountAll = 1500;
+int motionCountHour = 50;
+int motionCountDay = 710;
+int currentHour;
+int currentDay;
+
+WidgetRTC rtc;
 
 void setup()
 {
   Serial.begin(9600);
   delay(10);
+  mySwitch.enableReceive(4);  // Receiver on interrupt 0 => that is pin #2
 
   // connect to blink
   Blynk.begin(auth, ssid, password);
   Serial.println(Blynk.connected());
-
-  // 433 Mhz radio receiver pin
-  mySwitch.enableReceive(4);
+  
+  // neopixels
   strip.begin();
   strip.show();
 
   // set time manually: hour, minute, second, day, month, year
-  setTime(15,1,0,20,2,2017);
+  //setTime(18,0,0,20,2,2017);
+  // set time from Blynk
+  rtc.begin();
   Serial.println("Time is: ");
   Serial.print(hour());
   Serial.print(":");
   Serial.print(minute());
   Serial.print(":");
   Serial.print(second());
+  
 }
 
 
@@ -60,8 +70,37 @@ BLYNK_WRITE(V2)
 
 // send motion count to blynk and because interactive, display rainbowcycle on neopixel
 void  motionDetected() {
-  Serial.println(motionCount);
-  Blynk.virtualWrite(V7, motionCount);
+  
+  motionCountAll = motionCountAll + 1;
+  Blynk.virtualWrite(V7, motionCountAll);
+  Blynk.virtualWrite(V8, String(hour()) + ":" + String(minute()) + ":" + String(second()) );
+
+  if (hour() == currentHour) {
+    motionCountHour = motionCountHour + 1;
+    Serial.print("Motion count last hour: ");
+    Serial.println(motionCountHour);
+    Blynk.virtualWrite(V9, motionCountHour);
+  } else {
+    currentHour = hour();
+  }
+
+    if (day() == currentDay) {
+      motionCountDay = motionCountDay + 1;
+      Serial.print("Motion count last day: ");
+      Serial.println(motionCountDay);
+      Blynk.virtualWrite(V10, motionCountDay);
+  } else {
+    currentDay = day();
+  }
+
+  Serial.println("Time of the event was: ");
+  Serial.print(hour());
+  Serial.print(":");
+  Serial.print(minute());
+  Serial.print(":");
+  Serial.print(second());
+  Serial.println("back to scanning");
+  
   Blynk.run();
   rainbowCycle(5);
 }
@@ -77,21 +116,37 @@ void turnOffLeds() {
 // main loop
 void loop()
 {
-  // clock/random based color to Neopixel ring
+  
+
+  // if motion detected, call motionDetected function
+  if (mySwitch.available()) {
+    Serial.println("Motion detected: " + String(motionCountAll));
+    motionDetected();
+    mySwitch.resetAvailable();
+  } else {
+    // clock/random based color to Neopixel ring
    for(int t=0; t<strip.numPixels(); t++) {
     strip.setPixelColor(t, hour() * random(1, 2), minute() * random(1, 2), second() * random(1, 2));
     strip.show();
     }
+  }
 
-  // if motion detected, call motionDetected function
-  if (int(mySwitch.available()) == 1) {
-    motionDetected();
-  } 
+  //Serial.println(mySwitch.available());
+  Serial.print(minute());
+  Serial.print(":");
+  Serial.print(second());
+  Serial.println("");
+
+  if (hour() == 18 && minute() == 47 && second() == 15) {
+   Serial.print("IFTTT event fired with payload of :");
+   Serial.println(motionCountDay);
+   Blynk.virtualWrite(V20, motionCountDay);
+  }
 
   // run, reset and wait for a seconds
+  
+  delay(1000); // not to overload blynk I guess
   Blynk.run();
-  delay(100); // not to overload blynk I guess
-  mySwitch.resetAvailable();
 }
 
 
