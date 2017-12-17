@@ -1,0 +1,74 @@
+#include <RestClient.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
+const char* ssid = "";
+const char* password = "";
+const char LIGHTS_ON[] = "{\"on\":true}";
+const char LIGHTS_OFF[] = "{\"on\":false}";
+WiFiServer server(80);
+int i = 0;
+int statusCode = 0;
+String response;
+const char* host = "192.168.86.33";
+String resource = "/api/A5dlVtTKFNQpYyHeI6A7Y6na7MsYu3XV1VRi6tQg/lights/1/state";
+const int httpPort = 80;
+String commandOn = "{\"on\": true}";
+
+void setup () {
+  Serial.begin(115200);
+  delay(1000);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void loop() {
+  WiFiClient client;
+  if (!client.connect(host, httpPort)) {
+    Serial.println("connection failed");
+    return;
+  }
+
+  if (i == 1) {
+    Serial.println("lights on");
+    // This will send the request to the server
+    client.println("PUT /api/A5dlVtTKFNQpYyHeI6A7Y6na7MsYu3XV1VRi6tQg/lights/1/state");
+    client.println("Host: " + String(host) + ":" + String(httpPort));
+    client.println("User-Agent: ESP8266/1.0");
+    client.println("Connection: close");
+    client.println("Content-type: text/xml; charset=\"utf-8\"");
+    client.print("Content-Length: ");
+    client.println(commandOn.length()); // PUT COMMAND HERE
+    client.println();
+    client.println(commandOn); // PUT COMMAND HERE
+    i = 0;
+  } else {
+    Serial.println("lights off");
+
+//    String command = "{\"on\": false}";
+//    client.print(String("PUT ") + resource + "HTTP/1.1 \r\n" +
+//                 "Host: " + host + "\r\n" +
+//                 "Content-Length: " + command.length() + "\r\n" +
+//                 "Content-Type: application/json;charset=UTF-8\r\n\r\n" +
+//                 command + "\r\n" +
+//                 "Connection: close\r\n\r\n");
+
+    //statusCode = hue.put("/api/A5dlVtTKFNQpYyHeI6A7Y6na7MsYu3XV1VRi6tQg/lights/1/state","{\"on\":false}",&response);
+    i = 1;
+  }
+  delay(100);
+  Serial.println("Response:");
+  while (client.available()) {
+    String line = client.readStringUntil('\r');
+    Serial.print(line);
+  }
+  delay(5000);    //Send a request every 30 seconds
+
+}
